@@ -35,6 +35,7 @@ Features about GPT:
   - [x] 📝 **Summarize the selected paper** into several highly condensed sentences.
   - [x] 🔍 **Search items** in the library based on the selected text.
   - [x] ... ...
+  - [x] 📖 **[View all built-in AI prompts](PROMPTS.md)** - See documentation for all available prompts and how to customize them
 - [x] ⚙️ **Advanced settings for GPT**: You can set the [api key](https://platform.openai.com/account/api-keys), [model name](https://platform.openai.com/docs/api-reference/chat/create#chat/create-model), [api url](https://platform.openai.com/docs/api-reference/chat/create), [temperature](https://platform.openai.com/docs/api-reference/chat/create#chat/create-temperature).
 - [x] 📚 **Integrate with Better Notes**: You can directly open this plugin when using [Better Notes](https://github.com/windingwind/zotero-better-notes).
 
@@ -82,6 +83,15 @@ Click on the gear icon at the top right of the window. Click on `Install Add-on 
 ### [4] Set up the API key
 
 ![image](https://github.com/MuiseDestiny/zotero-gpt/assets/51939531/225c468a-acfc-43be-b5ac-cf6aaaa33e96)
+
+## 📖 AI Prompts Documentation
+
+**Looking for the built-in AI prompts?** Check out **[PROMPTS.md](PROMPTS.md)** for:
+- 📍 Where to find all AI prompts in the codebase
+- 📋 Complete list of built-in prompts (AskPDF, Translate, Improve Writing, etc.)
+- ✏️ How to view and customize prompts in the UI
+- 🛠️ Examples of creating custom prompts
+- 💡 Available APIs for building your own prompts
 
 ## Hi, Command Tag.
 > 👻 Follow the steps below, and you will gain a new understanding of command tags.
