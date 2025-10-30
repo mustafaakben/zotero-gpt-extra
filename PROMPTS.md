@@ -33,8 +33,8 @@ You can also create your own custom tags by typing `#TagName` and pressing `Ente
 ```
 You are a helpful assistant. Context information is below.
 ${
-  Meet.Global.views.messages = [];
-  Meet.Zotero.getRelatedText(Meet.Global.input)
+  Meet.Global.views.messages = [];  // Clears conversation history for fresh context
+  Meet.Zotero.getRelatedText(Meet.Global.input)  // Retrieves relevant PDF text
 }
 Using the provided context information, write a comprehensive reply to the given query. 
 Make sure to cite results using [number] notation after the reference. 
@@ -44,10 +44,10 @@ didn't provide enough information.
 
 Answer the question: ${Meet.Global.input}
 
-Reply in [user's locale]
+Reply in ${Zotero.locale}  // Automatically uses user's Zotero language setting
 ```
 
-**How it works**: This prompt extracts relevant text from your PDF using semantic search, then asks GPT to answer your question based on that context, with proper citations.
+**How it works**: This prompt clears the conversation history, extracts relevant text from your PDF using semantic search, then asks GPT to answer your question based on that context with proper citations. The response will be in your Zotero's configured language.
 
 ---
 
@@ -262,6 +262,9 @@ Generate 5 interesting research questions that could be explored as follow-up st
 
 - Use `${...}` code blocks to dynamically insert content
 - Regular expressions in triggers should be in JavaScript format: `/pattern/flags`
+  - Common flags: `i` (case-insensitive), `g` (global), `m` (multiline)
+  - Example: `/^summarize/i` matches "summarize", "Summarize", "SUMMARIZE", etc.
+  - Example: `/^(本文|这篇文章|论文)/` matches any of the three Chinese phrases at the start
 - The `position` attribute controls the order of tags (lower numbers appear first)
 - Use color coding to organize different types of prompts
 - Test prompts with `Ctrl + R` before saving with `Ctrl + S`
