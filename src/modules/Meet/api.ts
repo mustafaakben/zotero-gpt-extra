@@ -27,42 +27,42 @@ const Meet: {
   }
 } = {
   /**
-   * 开放给用户
-   * 示例：Meet.Zotero.xxx()
+   * Open to users
+   * Example: Meet.Zotero.xxx()
    */
   Zotero: {
     /**
-     * 返回系统剪贴板复制的内容
+     * Return system clipboard copied content
      */
     getClipboardText,
     /**
-     * 返回选中条目的某个字段值，多个选中返回第一个选中的某个字段值
-     * @fieldName 接收字段的名称
-     * 比如摘要，Meet.Zotero.getItemField("abstractNote")
+     * Return a field value of selected item, if multiple are selected return the field value of the first selected
+     * @fieldName Receives the name of the field
+     * For example abstract, Meet.Zotero.getItemField("abstractNote")
      */
     getItemField, 
     /**
-     * 返回阅读PDF时选中的文字
+     * Return selected text when reading PDF
      */
     getPDFSelection,
     /**
-     * 返回相关段落，如你选中多条条目，则返回与问题最相关的5个条目
-     * 如果你在PDF中则会读取整个PDF，返回与问题最相关的5个段落
-     * @queryText 接收一个查询字符串
-     * Meet.Zotero.getItemField("本文提到的XXX是什么意思？")
+     * Return related paragraphs, if you select multiple items, return the 5 most relevant items to the question
+     * If you are in PDF, it will read the entire PDF and return the 5 most relevant paragraphs to the question
+     * @queryText Receives a query string
+     * Meet.Zotero.getItemField("What does XXX mentioned in this article mean?")
      */
     getRelatedText,
     /**
-     * 获取PDF注释内容
-     * @select 接收一个boolean，是否返回选中的标注
-     * getPDFAnnotations(true) 会返回选中的标注
-     * getPDFAnnotations() 默认返回所有标注
+     * Get PDF annotation content
+     * @select Receives a boolean, whether to return selected annotations
+     * getPDFAnnotations(true) will return selected annotations
+     * getPDFAnnotations() returns all annotations by default
      */
     getPDFAnnotations,
   },
   /**
-   * 部分开放
-   * 下列函数只针对主笔记
+   * Partially open
+   * The following functions only target main notes
    */
   BetterNotes: {
     getEditorText,
