@@ -27,7 +27,7 @@ You can also create your own custom tags by typing `#TagName` and pressing `Ente
 
 **Purpose**: Ask questions about the content of a PDF document using context from the paper.
 
-**Trigger**: Questions starting with "本文", "这篇文章", or "论文" (Chinese triggers for "this article", "this paper")
+**Trigger**: Questions starting with "This article", "This paper", or "Paper"
 
 **Prompt Template**:
 ```
@@ -53,15 +53,15 @@ Reply in ${Zotero.locale}  // Automatically uses user's Zotero language setting
 
 ### 2. 🌟 Translate
 
-**Purpose**: Translate content to Simplified Chinese (can be modified for other languages).
+**Purpose**: Translate content to English (can be modified for other languages).
 
-**Trigger**: Text starting with "翻译" (Chinese for "translate")
+**Trigger**: Text starting with "Translate"
 
 **Prompt Template**:
 ```
-Translate these content to 简体中文:
+Translate these content to English:
 ${
-  Meet.Global.input.replace("翻译", "") ||
+  Meet.Global.input.replace("Translate", "") ||
   Meet.Zotero.getPDFSelection() ||
   Meet.Global.views.messages[0].content
 }
@@ -75,7 +75,7 @@ ${
 
 **Purpose**: Polish and improve academic writing with detailed explanations of changes.
 
-**Trigger**: Text starting with "润色" (Chinese for "polish")
+**Trigger**: Text starting with "Polish"
 
 **Prompt Template**:
 ```
@@ -85,7 +85,7 @@ rewrite the whole sentence. Furthermore, list all modification and explain the r
 do so in markdown table. 
 
 Paragraph: "${
-  Meet.Global.input.replace("润色", "") ||
+  Meet.Global.input.replace("Polish", "") ||
   Meet.Global.views.messages[0].content
 }"
 ```
@@ -98,7 +98,7 @@ Paragraph: "${
 
 **Purpose**: Work with content from your clipboard.
 
-**Trigger**: Text containing "剪贴板" or "复制内容" (Chinese for "clipboard" or "copied content")
+**Trigger**: Text containing "Clipboard" or "Copied content"
 
 **Prompt Template**:
 ```
@@ -116,13 +116,13 @@ ${Meet.Global.input}
 
 **Purpose**: Work with PDF annotations and highlights.
 
-**Trigger**: Text containing "注释", "高亮", or "标注" (Chinese for "annotations", "highlights", "markings"), optionally preceded by "选中", "选择的", or "选择" (Chinese for "selected")
+**Trigger**: Text containing "Annotation", "Highlight", or "Marking", optionally preceded by "Selected"
 
 **Prompt Template**:
 ```
 These are PDF Annotation contents:
 ${
-  Meet.Zotero.getPDFAnnotations(Meet.Global.input.match(/(选中|选择的|选择|所选)/))
+  Meet.Zotero.getPDFAnnotations(Meet.Global.input.match(/(Selected)/))
 }
 
 Please answer me in the language of my question. Make sure to cite results using [number] 
@@ -139,7 +139,7 @@ My question is: ${Meet.Global.input}
 
 **Purpose**: Work with selected PDF text.
 
-**Trigger**: Text starting with "这段", "选中" (Chinese for "this paragraph", "selected") followed by "文本", "话", "文字", or "描述" (Chinese for "text", "words", "description")
+**Trigger**: Text starting with "This paragraph", "Selected" followed by "Text", "Words", or "Description"
 
 **Prompt Template**:
 ```
@@ -160,7 +160,7 @@ Answer me in the language of my question. This is my question: ${Meet.Global.inp
 
 **Purpose**: Work with a single Zotero item's metadata.
 
-**Trigger**: Text containing "这篇" followed by "文献", "论文", or "文章" (Chinese for "this literature/paper/article")
+**Trigger**: Text containing "This" followed by "Literature", "Paper", or "Article"
 
 **Prompt Template**:
 ```
@@ -180,7 +180,7 @@ Base on this JSON: ${Meet.Global.input}
 
 **Purpose**: Work with multiple Zotero items.
 
-**Trigger**: Text containing "这些" followed by "文献" or "论文" (Chinese for "these literature/papers")
+**Trigger**: Text containing "These" followed by "Literature" or "Papers"
 
 **Prompt Template**:
 ```
