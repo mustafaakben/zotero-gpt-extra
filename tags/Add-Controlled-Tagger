@@ -1,9 +1,9 @@
 @Zotero GPT Tag
-#Tags[color=#0EA253][trigger=/^生成标签/]
+#Tags[color=#0EA253][trigger=/^Generate Tags/]
 ${
 (async () => {
   // =========================
-  // 0) 受控词表 + 与 zotero-gpt 对接的小工具
+  // 0) Controlled vocabulary + utility for interfacing with zotero-gpt
   // =========================
   const CONTROLLED = new Set([
     "#Field/BuildingEnergyConsumption",
@@ -16,7 +16,7 @@ ${
     "#Type/Review"
   ]);
 
-  // ========== 新增：ProgressWindow 通知封装（最小侵入） ==========
+  // ========== New: ProgressWindow notification wrapper (minimal intrusion) ==========
   const PW = (() => {
     let pw = null;
     let lines = [];
@@ -33,7 +33,7 @@ ${
         if (!Zotero?.ProgressWindow) return null;
         if (!pw) {
           pw = new Zotero.ProgressWindow();
-          pw.changeHeadline("智能标签生成");
+          pw.changeHeadline("Smart Tag Generation");
           pw.setProgress(100);
         }
         return pw;
@@ -82,7 +82,7 @@ ${
     return { showLine, startStep, update, close };
   })();
 
-  // ---------- 新增：格式规则 ----------
+  // ---------- New: Format rules ----------
   const TAXON_PREFIXES = ["#Field/","#Object/","#Method/","#Type/"];
   const isFormattedTag = (s) => {
     if (!s) return false;
@@ -91,8 +91,85 @@ ${
   };
   const normalizeTag = (s) => String(s ?? "")
     .replace(/\u00A0/g," ")
-    .replace(/[“”]/g,'"')
+    .replace(/[""]/g,'"')
     .trim();
+
+  // ---------- More robust: Extract JSON array from any text ----------
+  const extractJsonArray = (txt) => {
+    if (!txt) return null;
+    let s = String(txt)
+      .replace(/^[\s\S]*?(\[)/, "$1")
+      .replace(/(\])[\s\S]*$/, "$1")
+      .replace(/[""]/g, '"');
+    const m = s.match(/\[[\s\S]*\]/);
+    if (!m) return null;
+    try {
+      const arr = JSON.parse(m[0]);
+      if (!Array.isArray(arr)) return null;
+      return arr.map(x => normalizeTag(x)).filter(Boolean);
+    } catch(_) { return null; }
+  };
+
+  // ---------- New: Get "existing formatted tags" from Zotero library ----------
+  const getAllFormattedTagsInLibrary = async () => {
+    const out = new Set();
+    const lower2canon = new Map();
+    try {
+      if (Zotero?.Tags?.getAll) {
+        const all = await Zotero.Tags.getAll();
+        for (const t of (all || [])) {
+          const name = normalizeTag(typeof t === "string" ? t : (t?.name || t?.tag || ""));
+          if (isFormattedTag(name)) {
+            out.add(name);
+            lower2canon.set(name.toLowerCase(), name);
+          }
+        }
+      }
+    } catch (_) {}
+
+    try {
+      const ts = ZoteroPane?.tagSelector;
+      const list = (ts?.getTags && ts.getTags()) || ts?._tags || [];
+      for (const t of list) {
+        const name = normalizeTag(typeof t === "string" ? t : (t?.name || t?.tag || ""));
+        if (isFormattedTag(name)) {
+          out.add(name);
+          lower2canon.set(name.toLowerCase(), name);
+        }
+      }
+    } catch (_) {}
+
+    return { formattedSet: out, lower2canon };
+  };
+
+  // ---------- LLM prompt ----------
+  const askLLMForTags = async (controlledListString, paperText) => {
+    const prompt = `
+Read the abstract/fulltext below and output 3–5 tags ONLY as a JSON array.
+
+Rules:
+- Each tag MUST strictly follow these namespaces and format:
+  "#Field/<Name>" or "#Object/<Name>" or "#Method/<Name>" or "#Type/<Name>"
+- Use "/" to separate the top-level namespace and the name (e.g., "#Field/IndoorThermalComfort").
+- Prefer concepts in the controlled list when applicable; otherwise generate appropriate custom tags that still follow the format above.
+- Output ONLY the JSON array (no prose, no code fence, no comments).
+
+Controlled list (for reference):
+${controlledListString}
+
+Abstract / Text:
+${paperText}
+
+Example of the ONLY acceptable output format:
+["#Field/IndoorThermalComfort","#Method/CFD","#Object/Furniture"]
+    `.trim();
+
+    PW.startStep("Calling LLM to generate tags…");
+    const res = await Meet?.Global?.views?.ask?.(prompt);
+    const parsed = extractJsonArray(res);
+    if (!parsed) PW.showLine("LLM did not return a valid JSON array, attempting fallback strategy", "warning");
+    return parsed;
+  };
 
   // ---------- 更稳健：从任意文本中抽 JSON 数组 ----------
   const extractJsonArray = (txt) => {
@@ -245,8 +322,8 @@ Example of the ONLY acceptable output format:
     if (!raw) return raw;
     const lines = raw.split(/\r?\n/);
     const lower = lines.map(l => l.trim().toLowerCase());
-    const refHeadings = ["references","参考文献","bibliography","works cited","literature cited"];
-    const tailHeadings = ["declaration of competing interest","conflict of interest","credit authorship contribution statement","acknowledgements","acknowledgments","作者贡献","致谢","资金支持","funding","appendix","附录"];
+    const refHeadings = ["references","bibliography","works cited","literature cited"];
+    const tailHeadings = ["declaration of competing interest","conflict of interest","credit authorship contribution statement","acknowledgements","acknowledgments","funding","appendix"];
     let cutIdx = -1;
     for (let i = lines.length - 1; i >= 0; i--) {
       const s = lower[i];
@@ -273,7 +350,7 @@ Example of the ONLY acceptable output format:
     return (cutIdx >= 0) ? lines.slice(0, cutIdx).join("\n").trim() : raw;
   };
 
-  // ========== 若无法提取文本，则上传 PDF 给 LLM ==========
+  // ========== If text extraction fails, upload PDF to LLM ==========
   const uploadPdfIfNoText = async (pdfItem, extractedTxt) => {
     try {
       if (!pdfItem) return false;
@@ -281,20 +358,20 @@ Example of the ONLY acceptable output format:
       if (!empty) return false;
       const up = window?.Meet?.OpenAI?.uploadFile;
       if (typeof up !== "function") return false;
-      PW.startStep("未提取到文本，上传 PDF 给 LLM…");
+      PW.startStep("No text extracted, uploading PDF to LLM…");
       await up([pdfItem]);
-      PW.showLine("PDF 已上传至 LLM", "success");
+      PW.showLine("PDF uploaded to LLM", "success");
       return true;
     } catch (e) {
-      PW.showLine(`PDF 上传失败：${e.message}`, "error");
+      PW.showLine(`PDF upload failed: ${e.message}`, "error");
       return false;
     }
   };
 
   // =========================
-  // 2) 选取单一 PDF 目标
+  // 2) Select single PDF target
   // =========================
-  PW.showLine("开始生成智能标签…", "info");
+  PW.showLine("Starting smart tag generation…", "info");
 
   const isLibEnv = (typeof Zotero_Tabs !== "undefined");
   const isLibrary = isLibEnv && (Zotero_Tabs.selectedType === "library");
@@ -341,7 +418,7 @@ Example of the ONLY acceptable output format:
   }
 
   if (!pdfItem) {
-    PW.showLine("未找到 PDF 附件，请选择包含 PDF 的文献项", "error");
+    PW.showLine("PDF attachment not found, please select a document with a PDF", "error");
     PW.close(3000);
     return "";
   }
@@ -349,16 +426,16 @@ Example of the ONLY acceptable output format:
   const targets = [{ item: pdfItem, number: 1 }];
   const CONTROLLED_LIST_STRING = Array.from(CONTROLLED).join("\n");
 
-  // 预抓库中格式化标签
-  PW.startStep("读取库内已存在的格式化标签…");
+  // Pre-fetch formatted tags from library
+  PW.startStep("Reading existing formatted tags in library…");
   const { formattedSet: LIB_FORMATTED_SET, lower2canon: LIB_LC2CANON } = await getAllFormattedTagsInLibrary();
 
   for (const { item: pdfItem, number } of targets) {
     try {
       const top = pdfItem?.topLevelItem || pdfItem;
 
-      // 提取文本
-      PW.startStep("提取 PDF 文本…");
+      // Extract text
+      PW.startStep("Extracting PDF text…");
       let textRaw = "";
       try {
         if (typeof Zotero?.PDFWorker?.getFullText === "function") {
@@ -372,34 +449,34 @@ Example of the ONLY acceptable output format:
       const text = stripReferences(textRaw);
       const payload = text || "(no fulltext extracted)";
 
-      // 调 LLM
+      // Call LLM
       const arr = await askLLMForTags(CONTROLLED_LIST_STRING, payload);
 
-      // 匹配/接受
+      // Match/Accept
       let candidateTags = mapToExistingOrAcceptCustom(arr, LIB_FORMATTED_SET, LIB_LC2CANON);
 
       if (!candidateTags.length) {
         candidateTags = ["#Field/BuildingEnergyConsumption","#Method/MachineLearning","#Object/Furniture"]
           .filter(t => CONTROLLED.has(t))
           .slice(0, 3);
-        PW.showLine("LLM 未返回有效标签，使用兜底标签", "warning");
+        PW.showLine("LLM did not return valid tags, using fallback tags", "warning");
       } else {
-        PW.showLine(`LLM 返回标签：${candidateTags.join(", ")}`, "info");
+        PW.showLine(`LLM returned tags: ${candidateTags.join(", ")}`, "info");
       }
 
-      // 写入
+      // Write to Zotero
       if (candidateTags.length) {
         await applyTagsToZotero(top, candidateTags);
       }
     } catch (e) {
-      PW.showLine(`处理失败：${e.message}`, "error");
-      console.error("(处理失败)", e);
+      PW.showLine(`Processing failed: ${e.message}`, "error");
+      console.error("(Processing failed)", e);
     }
   }
 
-  PW.showLine("标签生成流程完成", "success");
+  PW.showLine("Tag generation process completed", "success");
   PW.close(1800);
 
   return "";
-})();  // IIFE 结束
+})();  // IIFE end
 }$

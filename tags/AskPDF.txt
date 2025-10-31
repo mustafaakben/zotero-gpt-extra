@@ -25,4 +25,5 @@ Answer the question:
 window.gptInputString 
 ```
 
-Reply in 简体中文
+Reply in English
+
