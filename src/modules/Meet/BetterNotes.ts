@@ -2,8 +2,8 @@ import Views from "../views";
 import Meet from "./api";
 
 /**
- * 优先返回选中文本，再返回所在span前所有文字MD
- * @param span 光标所在行，HTMLSpanElement
+ * Prioritize returning selected text, then return all text MD before the span
+ * @param span The line where the cursor is located, HTMLSpanElement
  * @returns 
  */
 export async function getEditorText(span: HTMLSpanElement) {
@@ -38,7 +38,7 @@ export function replaceEditorText(htmlString: string) {
   const BNEditorApi = Zotero.BetterNotes.api.editor
   const editor = BNEditorApi.getEditorInstance(Zotero.BetterNotes.data.workspace.mainId);
   const range = BNEditorApi.getRangeAtCursor(editor)
-  // 删除原来
+  // Delete original
   window.setTimeout(async () => {
     await Meet.Global.lock
     Meet.Global.lock = Zotero.Promise.defer() as _ZoteroTypes.PromiseObject
@@ -49,7 +49,7 @@ export function replaceEditorText(htmlString: string) {
 }
 
 /**
- * 在编辑器光标处插入文本
+ * Insert text at editor cursor position
  * @param htmlString 
  */
 export function insertEditorText(htmlString: string, editor?: any) {
@@ -69,7 +69,7 @@ export function insertEditorText(htmlString: string, editor?: any) {
 }
 
 /**
- * 让GPT UI跟随此行
+ * Make GPT UI follow this line
  */
 export function follow() {
   const views = Zotero.ZoteroGPT.views as Views
@@ -81,7 +81,7 @@ export function follow() {
   let place = (reBuild: boolean = false) => {
     const lineIndex = BNEditorApi.getLineAtCursor(editor) + 1
     let line = getLine(lineIndex)
-    // 光标有文字就下一行
+    // If cursor has text, go to next line
     if (line.innerText.replace("\n", "").trim().length != 0) {
       line = getLine(lineIndex+1)
     }
@@ -93,7 +93,7 @@ export function follow() {
       leftPanel.getBoundingClientRect().width
     views.show(x + 30, y + 38, reBuild)
   }
-  // 第一次重建UI
+  // First time rebuilding UI
   place(true)
   let id = window.setInterval(async () => {
     // await Meet.Global.lock;

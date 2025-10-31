@@ -39,7 +39,7 @@ const requestArgs: RequestArg[] = [
 ]
 
 /**
- * 给定文本和文档，返回文档列表，返回最相似的几个
+ * Given text and documents, return document list, return the most similar ones
  * @param queryText 
  * @param docs 
  * @param obj 
@@ -49,9 +49,9 @@ export async function similaritySearch(queryText: string, docs: Document[], obj:
   const storage = Meet.Global.storage = Meet.Global.storage || new LocalStorage(config.addonRef)
   await storage.lock.promise;
   const embeddings = new OpenAIEmbeddings() as any
-  // 查找本地，为节省空间，只储存向量
-  // 因为随着插件更新，解析出的PDF可能会有优化，因此再此进行提取MD5值作为验证
-  // 但可以预测，本地JSON文件可能会越来越大
+  // Search locally, only store vectors to save space
+  // As the plugin is updated, the parsed PDF may be optimized, so MD5 value is extracted here for verification
+  // But it can be predicted that the local JSON file may get larger and larger
   const id = MD5(docs.map((i: any) => i.pageContent).join("\n\n")).toString()
   await storage.lock
   const _vv = storage.get(obj, id)
@@ -69,7 +69,7 @@ export async function similaritySearch(queryText: string, docs: Document[], obj:
   }
 
   const v0 = await embeddings.embedQuery(queryText)
-  // 从20个里面找出文本最长的几个，防止出现较短但相似度高的段落影响回答准确度
+  // Find the longest text from 20 results to prevent short but highly similar paragraphs from affecting answer accuracy
   const relatedNumber = Zotero.Prefs.get(`${config.addonRef}.relatedNumber`) as number
   Meet.Global.popupWin.createLine({ text: `Searching ${relatedNumber} related content...`, type: "default" })
   const k = relatedNumber * 5
@@ -152,13 +152,13 @@ class OpenAIEmbeddings {
 
 export async function getGPTResponse(requestText: string) {
   const secretKey = Zotero.Prefs.get(`${config.addonRef}.secretKey`)
-  // 这里可以补充很多免费API，然后用户设置用哪个
+  // Many free APIs can be added here, then user can set which one to use
   if (!secretKey) { return await getGPTResponseBy(requestArgs[1], requestText) }
   else { return await getGPTResponseByOpenAI(requestText) }
 }
 
 /**
- * 所有getGPTResponseTextByXXX参照此函数实现
+ * All getGPTResponseTextByXXX functions are implemented based on this function
  * gpt-3.5-turbo / gpt-4
  * @param requestText 
  * @returns 
@@ -176,11 +176,11 @@ export async function getGPTResponseByOpenAI(requestText: string) {
   })
   // outputSpan.innerText = responseText;
   const deltaTime = Zotero.Prefs.get(`${config.addonRef}.deltaTime`) as number
-  // 储存上一次的结果
+  // Store last result
   let _textArr: string[] = []
-  // 随着请求返回实时变化
+  // Changes in real-time with request return
   let textArr: string[] = []
-  // 激活输出
+  // Activate output
   views.stopAlloutput()
   views.setText("")
   let responseText: string | undefined
@@ -227,7 +227,7 @@ export async function getGPTResponseByOpenAI(requestText: string) {
                 }
               }).filter(Boolean)
             } catch {
-              // 出错一般是token超出限制
+              // Errors generally occur when token limit is exceeded
               ztoolkit.log(e.target.response)
             }
             if (e.target.timeout) {
@@ -264,7 +264,7 @@ export async function getGPTResponseByOpenAI(requestText: string) {
 }
 
 /**
- * 返回值要是纯文本
+ * Return value should be plain text
  * @param requestArg
  * @param requestText 
  * @param views 
@@ -282,8 +282,8 @@ export async function getGPTResponseBy(
     role: "user",
     content: requestText
   })
-  // 储存上一次的结果
-  // 激活输出
+  // Store last result
+  // Activate output
   views.stopAlloutput()
   views.setText("")
   const id = window.setInterval(() => {
